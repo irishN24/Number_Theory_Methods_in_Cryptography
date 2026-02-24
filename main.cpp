@@ -515,6 +515,43 @@ public:
         os << bn.cout_10();
         return os;
     }
+    Big_Number fast_square() const {
+        Big_Number res(2 * len);
+        //1. Для i от 0 до 2n - 1 положить y[i] = 0
+        for (int i = 0; i < res.maxlen; i++) {
+            res.coef[i] = 0;
+        }
+        //2. для i от 0 до n - 1
+        for (int i = 0; i < len; i++){
+            D_Base carry = 0;
+            //2.1. (u v)_b = y_{2i} + x_i * x_i
+            D_Base product = (D_Base)coef[i] * (D_Base)coef[i] + (D_Base)res.coef[2 * i];
+            res.coef[2 * i] = (Base)product;
+            carry = product >> BASE_SIZE;
+            //2.2. (cuv)_b = y_{i+j} + 2*x_i*x_j + (cu)_b
+            for (int j = i + 1; j < len; j++) {
+                D_Base temp = (D_Base)res.coef[i + j] + 2 * (D_Base)coef[i] * (D_Base)coef[j] + (D_Base)carry;
+                res.coef[i + j] = (Base)temp;
+                carry = temp >> BASE_SIZE;
+            }
+            //2.3. Число (y_i+n+1, y_i+n)_b увеличить на перенос (cu)_b
+            res.coef[i + len] += (Base)carry;
+            // Обработка возможного переполнения при добавлении переноса
+            size_t pos = i + len;
+            while (pos < res.maxlen - 1 && res.coef[pos] >= (Base)-1) {
+                D_Base val = (D_Base)res.coef[pos] + (D_Base)res.coef[pos + 1];
+                res.coef[pos + 1] = (Base)(val >> BASE_SIZE);
+                res.coef[pos] = (Base)val;
+                pos++;
+            }
+        }
+        res.len = 2 * len;
+        while (res.len > 1 && res.coef[res.len - 1] == 0) {
+            res.len--;
+        }
+
+        return res;
+    }
 };
 Big_Number& Big_Number::operator+=(const Big_Number& v) {
     *this = *this + v;
@@ -552,6 +589,7 @@ Big_Number& Big_Number::operator %=(const Big_Number& v) {
     *this = *this % v;
     return *this;
 }
+
 void test() {
     int max_len = 1000;
     int N = 1000;
@@ -585,7 +623,41 @@ void test() {
 
 int main() {
     srand(time(0));
-    Big_Number v4(12, 1);
+    Big_Number num(10, 1);
+    cout << "Original number (hex): " << num.Big_Num_To_HEX() << "\n";
+    cout << "Original number (dec): " << num << "\n";
+
+    Big_Number square_std = num * num;
+    cout << "Square (standart): " << square_std << "\n";
+
+    Big_Number square_fast = num.fast_square();
+    cout << "Square (fast square): " << square_fast << "\n";
+
+    // Проверка равенства результатов
+    if (square_std == square_fast) {
+        cout << "Yes\n";
+    } else {
+        cout << "No!\n";
+    }
+    // Тест скорости
+    const int TEST_SIZE = 100;
+    Big_Number large_num(1000, 1);
+
+    auto start = chrono::high_resolution_clock::now();
+    Big_Number std_result = large_num * large_num;
+    auto end = chrono::high_resolution_clock::now();
+    auto std_duration = chrono::duration_cast<chrono::microseconds>(end - start);
+
+    start = chrono::high_resolution_clock::now();
+    Big_Number fast_result = large_num.fast_square();
+    end = chrono::high_resolution_clock::now();
+    auto fast_duration = chrono::duration_cast<chrono::microseconds>(end - start);
+
+    cout << "\nStandard multiplication: " << std_duration.count() << " microsec\n";
+    cout << "Fast square: " << fast_duration.count() << " microsec \n";
+
+
+    /*Big_Number v4(12, 1);
     cout << "Num4: " << v4.Big_Num_To_HEX() << "\n";
     Big_Number v5(5, 1);
     cout << "Num5: " << v5.Big_Num_To_HEX() << "\n";
@@ -595,7 +667,7 @@ int main() {
     cout << "Num7 = " << v7.Big_Num_To_HEX() << "\n";
     Big_Number v8 = v6 % v5;
     cout << "Num8 = " << v8.Big_Num_To_HEX() << "\n";
-    test();
+    test();*/
 
     return 0;
 }
