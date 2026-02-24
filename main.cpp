@@ -516,7 +516,97 @@ public:
         return os;
     }
     Big_Number fast_square() const {
-        Big_Number res(2 * len);
+        int n = len;
+        int b = 1 << BASE_SIZE;  // основание
+
+        Big_Number y(2 * n + 1);
+        for (int i = 0; i < y.maxlen; i++) {
+            y.coef[i] = 0;
+        }
+
+        for (int i = 0; i < n; i++) {
+            // Шаг 2.1
+            D_Base uv = y.coef[2 * i] + (D_Base)coef[i] * (D_Base)coef[i];
+            y.coef[2 * i] = uv % b;
+            D_Base cu = uv / b;
+
+            D_Base two_x_i = 2 * coef[i];
+
+            // Шаг 2.2
+            for (int j = i + 1; j < n; j++) {
+                D_Base cuv = y.coef[i + j] + two_x_i * coef[j] + cu;
+                y.coef[i + j] = cuv % b;
+                cu = cuv / b;
+            }
+
+            // Шаг 2.3
+            y.coef[i + n] += cu % b;
+            y.coef[i + n + 1] += cu / b;
+        }
+
+        y.len = 2 * n + 1;
+        while (y.len > 1 && y.coef[y.len - 1] == 0) {
+            y.len--;
+        }
+
+        return y;
+
+        /*int n = len;
+        Big_Number result(2 * n);
+
+        // Инициализация результата нулями
+        for (int i = 0; i < 2 * n; i++) {
+            result.coef[i] = 0;
+        }
+
+        for (int i = 0; i < n; i++) {
+            D_Base carry = 0;
+            D_Base u, v;
+
+            // Шаг 2.1: (u v)_b = y_{2i} + x_i * x_i
+            D_Base temp = (D_Base)result.coef[2 * i] + (D_Base)coef[i] * (D_Base)coef[i];
+            v = temp & ((1 << BASE_SIZE) - 1);
+            u = temp >> BASE_SIZE;
+
+            result.coef[2 * i] = (Base)v;
+            carry = u;
+
+            // Шаг 2.2: обработка остальных элементов
+            for (int j = i + 1; j < n; j++) {
+                // (c u v)_b = y_{i+j} + 2*x_i*x_j + (c u)_b
+                D_Base c_u = carry;
+                D_Base sum = (D_Base)result.coef[i + j] +
+                             2 * (D_Base)coef[i] * (D_Base)coef[j] +
+                             c_u;
+
+                v = sum & ((1 << BASE_SIZE) - 1);
+                u = sum >> BASE_SIZE;
+
+                result.coef[i + j] = (Base)v;
+                carry = u;
+            }
+
+            // Шаг 2.3: добавление оставшегося переноса
+            result.coef[i + n] += (Base)carry;
+
+            // Обработка цепочки переносов
+            int pos = i + n;
+            while (pos < 2 * n - 1 && result.coef[pos] >= (Base)(1 << BASE_SIZE) - 1) {
+                D_Base val = (D_Base)result.coef[pos] + (D_Base)result.coef[pos + 1];
+                result.coef[pos + 1] = (Base)(val >> BASE_SIZE);
+                result.coef[pos] = (Base)val;
+                pos++;
+            }
+        }
+
+        result.len = 2 * n;
+        while (result.len > 1 && result.coef[result.len - 1] == 0) {
+            result.len--;
+        }
+
+        return result;*/
+
+        /*Big_Number res(2 * len);
         //1. Для i от 0 до 2n - 1 положить y[i] = 0
         for (int i = 0; i < res.maxlen; i++) {
             res.coef[i] = 0;
@@ -536,7 +626,7 @@ public:
             }
             //2.3. Число (y_i+n+1, y_i+n)_b увеличить на перенос (cu)_b
             res.coef[i + len] += (Base)carry;
-            // Обработка возможного переполнения при добавлении переноса
+
             size_t pos = i + len;
             while (pos < res.maxlen - 1 && res.coef[pos] >= (Base)-1) {
                 D_Base val = (D_Base)res.coef[pos] + (D_Base)res.coef[pos + 1];
@@ -550,7 +640,7 @@ public:
             res.len--;
         }
 
-        return res;
+        return res;*/
     }
 };
 Big_Number& Big_Number::operator+=(const Big_Number& v) {
