@@ -633,6 +633,7 @@ void test() {
 
 int main() {
     srand(time(0));
+    int count = 0;
     for (int i = 0; i <= 5000; i++){
         int n = rand() % 1000 + 1;
         Big_Number num(n, 1);
@@ -647,13 +648,10 @@ int main() {
 
         // Проверка равенѝтва результатов
         if (square_std == square_fast) {
-            cout << "Yes\n";
-        } else {
-            cout << "No!\n";
-        }
+            count++;}
     }
-
-    // Теѝт ѝкороѝти
+    cout << count << "\n";
+    // Тест скорости
     Big_Number large_num(1000, 1);
 
     auto start = chrono::high_resolution_clock::now();
