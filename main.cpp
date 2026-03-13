@@ -653,19 +653,25 @@ int main() {
     cout << count << "\n";
     // Тест скорости
     Big_Number large_num(1000, 1);
+    cout << "large num: " << large_num.Big_Num_To_HEX() << "\n";
 
     auto start = chrono::high_resolution_clock::now();
     Big_Number std_result = large_num * large_num;
     auto end = chrono::high_resolution_clock::now();
     auto std_duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    cout << "\nStandard multiplication: " << std_duration.count() << " microsec\n";
+
 
     start = chrono::high_resolution_clock::now();
     Big_Number fast_result = large_num.fast_square();
     end = chrono::high_resolution_clock::now();
     auto fast_duration = chrono::duration_cast<chrono::microseconds>(end - start);
-
-    cout << "\nStandard multiplication: " << std_duration.count() << " microsec\n";
     cout << "Fast square: " << fast_duration.count() << " microsec \n";
-
+    if(std_result == fast_result){
+        cout << "Yes\n";
+    }
+    else{
+        cout << "NO\n";
+    }
     return 0;
 }
