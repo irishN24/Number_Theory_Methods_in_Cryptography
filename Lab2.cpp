@@ -48,28 +48,18 @@ Big_Number Exponentiation_t(const Big_Number& exponent) const{
         return res;
     }
 
+    Big_Number z;
+    z = 1;
+
     Big_Number q = *this;
-    //cout << "q: " << q.Big_Num_To_HEX() << endl;
-    Big_Number z(1);
-    //cout << "z: " << z << endl;
-    //cout << "y0: " << getBit(exponent, 0) << endl;
-    if (getBit(exponent, 0) == 1) {
-        z = q;
-    }
-    else if(getBit(exponent, 0) == 0){
-        z.coef[0] = 1;
-    }
-    //cout << "z: " << z << endl;
 
-
-    for (int i = 1; i < bits; ++i) {
-        //cout << "i =  " << i << endl;
-        q = q.fast_square();
-        //cout << "q: " << q.Big_Num_To_HEX() << endl;
+    for (int i = 0; i < bits; ++i) {
         if (getBit(exponent, i) == 1) {
             z = z * q;
-            //cout << "z: " << z << endl;
         }
+        q = q.fast_square();
     }
+
     return z;
+}
 }
